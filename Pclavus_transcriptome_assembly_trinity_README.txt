@@ -80,6 +80,8 @@ echo 'module load python3/3.7.7' >> trinity.sh
 echo "~/bin/trinityrnaseq-v2.13.2/Trinity --seqType fq --single Pclavus_reads.fastq --CPU 20 --max_memory 200G --output Pclavus_trinity" >> trinity.sh
 sbatch -o trinity.o%j -e trinity.e%j trinity.sh
 
+Trinity --seqType fq --single Pclavus_reads.fastq --CPU 10 --max_memory 40G --output Pclavus_trinity
+
 # If any of the assemblies fail in the chrysalis step, find the output directory for each of the error files and delete them, or move them to your backup directory. They should look like this: "Pclavus_trinity/read_partitions/Fb_4/CBin_4670/c467359.trinity.reads.fa.out"
 mv Pclavus_trinity/read_partitions/Fb_4/CBin_4670/c467359.trinity.reads.fa.out Pclavus_trinity/read_partitions/Fb_3/CBin_3088/c309109.trinity.reads.fa.out Pclavus_trinity/read_partitions/Fb_3/CBin_3690/c369317.trinity.reads.fa.out Pclavus_trinity/read_partitions/Fb_3/CBin_3701/c370414.trinity.reads.fa.out temp_backup/.
 
