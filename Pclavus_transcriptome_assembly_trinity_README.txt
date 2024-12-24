@@ -43,19 +43,20 @@ mv Oculina_arbuscula_transcriptome/Sarahs_scripts/* .
 chmod +x ~/bin/bs
 
 ## Installing Trinity
-wget https://github.com/trinityrnaseq/trinityrnaseq/releases/download/Trinity-v2.13.2/trinityrnaseq-v2.13.2.FULL.tar.gz
-tar -vxf trinityrnaseq-v2.13.2.FULL.tar.gz
-cd trinityrnaseq-v2.13.2/
+wget https://github.com/trinityrnaseq/trinityrnaseq/releases/download/Trinity-v2.15.2/trinityrnaseq-v2.15.2.FULL.tar.gz
+tar -vxf trinityrnaseq-v2.15.2.FULL.tar.gz
+cd trinityrnaseq-v2.15.2/
 make install
 make plugins
+# add the following to ~/.bashrc: export TRINITY_HOME=/usr/local/bin
 # test it
 cd sample_data/test_Trinity_Assembly/
 ./runMe.sh
 
 ## Installing jellyfish
-wget https://github.com/gmarcais/Jellyfish/releases/download/v2.3.0/jellyfish-2.3.0.tar.gz
-tar -vxf jellyfish-2.3.0.tar.gz
-cd jellyfish-2.3.0
+wget https://github.com/gmarcais/Jellyfish/releases/download/v2.3.1/jellyfish-2.3.1.tar.gz
+tar -vxf jellyfish-2.3.1.tar.gz
+cd jellyfish-2.3.1
 ./configure
 make
 make install
