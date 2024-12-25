@@ -1,4 +1,4 @@
-## De novo transcriptome assembly pipeline for Pavona clavus, version December 23, 2024
+## De novo transcriptome assembly pipeline for Pavona clavus, version December 24, 2024 (Christmas Eve edition!)
 # Adapted by Michael Studivan (studivanms@gmail.com) based on repos by Misha Matz (https://github.com/z0on/annotatingTranscriptomes.git), Eli Meyer (https://github.com/Eli-Meyer/sequence_utilities.git; https://github.com/Eli-Meyer/transcriptome_utilities.git), and  Brian Strehlow (https://github.com/bstrehlow/Transcriptome_assembly.git) for use on the FAU KoKo HPC
 
 
@@ -42,24 +42,9 @@ mv Oculina_arbuscula_transcriptome/Sarahs_scripts/* .
 
 chmod +x ~/bin/bs
 
-## Installing Trinity
-wget https://github.com/trinityrnaseq/trinityrnaseq/releases/download/Trinity-v2.15.2/trinityrnaseq-v2.15.2.FULL.tar.gz
-tar -vxf trinityrnaseq-v2.15.2.FULL.tar.gz
-cd trinityrnaseq-v2.15.2/
-make install
-make plugins
-# add the following to ~/.bashrc: export TRINITY_HOME=/usr/local/bin
-# test it
-cd sample_data/test_Trinity_Assembly/
-./runMe.sh
-
-## Installing jellyfish
-wget https://github.com/gmarcais/Jellyfish/releases/download/v2.3.1/jellyfish-2.3.1.tar.gz
-tar -vxf jellyfish-2.3.1.tar.gz
-cd jellyfish-2.3.1
-./configure
-make
-make install
+# Installing Trinity
+cd ~/bin/
+wget https://data.broadinstitute.org/Trinity/TRINITY_SINGULARITY/trinityrnaseq.v2.15.2.simg
 
 
 #------------------------------
@@ -70,17 +55,14 @@ srun cat *.trim > Pclavus_reads.fastq
 # Move this to ~/annotate/
 
 # Trinity
-# the python module required by launcher_creator is messing up the steps involving numpy, so we'll do it the old school way
 echo '#!/bin/bash' > trinity.sh
 echo '#SBATCH --partition=longq7' >> trinity.sh
 echo '#SBATCH -N 1' >> trinity.sh
 echo '#SBATCH --exclusive' >> trinity.sh
 echo '#SBATCH --mem=200GB' >> trinity.sh
-echo 'module load python3/3.7.7' >> trinity.sh
-echo "~/bin/trinityrnaseq-v2.13.2/Trinity --seqType fq --single Pclavus_reads.fastq --CPU 20 --max_memory 200G --output Pclavus_trinity" >> trinity.sh
+echo 'module load singularity/3.4.1' >> trinity.sh
+echo 'singularity exec -e ~/bin/trinityrnaseq.v2.15.2.simg Trinity --seqType fq --single `pwd`/Pclavus_reads.fastq --CPU 20 --max_memory 200G --output `pwd`/Pclavus_trinity' >> trinity.sh
 sbatch -o trinity.o%j -e trinity.e%j trinity.sh
-
-Trinity --seqType fq --single Pclavus_reads.fastq --CPU 10 --max_memory 40G --output Pclavus_trinity
 
 # If any of the assemblies fail in the chrysalis step, find the output directory for each of the error files and delete them, or move them to your backup directory. They should look like this: "Pclavus_trinity/read_partitions/Fb_4/CBin_4670/c467359.trinity.reads.fa.out"
 mv Pclavus_trinity/read_partitions/Fb_4/CBin_4670/c467359.trinity.reads.fa.out Pclavus_trinity/read_partitions/Fb_3/CBin_3088/c309109.trinity.reads.fa.out Pclavus_trinity/read_partitions/Fb_3/CBin_3690/c369317.trinity.reads.fa.out Pclavus_trinity/read_partitions/Fb_3/CBin_3701/c370414.trinity.reads.fa.out temp_backup/.
