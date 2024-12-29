@@ -164,23 +164,20 @@ cat SILVA_SSU_LSU_combined.fasta arb-silva.de_2024-12-27_id1369219_tax_silva_tru
 cp ~/bin/Pclavus_mitoRNA.fasta .
 
 conda activate bioperl
-# Running a perl script that blasts the transcriptome against inputted contamination sequences to generate a final, clean transcriptome
-echo '#!/bin/bash' > contam.sh
-echo '#SBATCH --partition=mediumq7' >> contam.sh
-echo '#SBATCH -N 1' >> contam.sh
-echo '#SBATCH --mem=200GB' >> contam.sh
-echo 'conda activate bioperl' >> contam.sh
-echo 'module load blast-plus-2.11.0-gcc-9.2.0-5tzbbls' >> contam.sh
-echo "perl ~/bin/RemoveContamSeq_blast+.pl type=blastn score=45 reads=Pclavus_Trinity_noshorts.fasta contam=rRNA,Pclavus_rRNA.fasta contam=Mt,Pclavus_mitoRNA.fasta table=Pclavus_Trinity_contamination.txt passed=Pclavus_Trinity_final.fasta" >> contam.sh
-sbatch -o contam.o%j -e contam.e%j contam.sh
+# Running a perl script that blasts the transcriptome against inputted contamination sequences to generate a clean transcriptome
+echo 'conda activate bioperl' > contam
+echo 'module load blast-plus-2.11.0-gcc-9.2.0-5tzbbls' >> contam
+echo "perl ~/bin/RemoveContamSeq_blast+.pl type=blastn score=45 reads=Pclavus_Trinity_noshorts.fasta contam=rRNA,Pclavus_rRNA.fasta contam=Mt,Pclavus_mitoRNA.fasta table=Pclavus_Trinity_contamination.txt passed=Pclavus_Trinity_clean.fasta" >> contam
+launcher_creator.py -j contam -n contam -q mediumq7 -t 24:00:00 -e studivanms@gmail.com
+sbatch --mem=200GB contam.slurm
 
-echo 'conda activate bioperl' > contam2.sh
-echo 'module load blast-plus-2.11.0-gcc-9.2.0-5tzbbls' >> contam2.sh
-echo "perl ~/bin/RemoveContamSeq_blast+.pl type=blastn score=45 reads=Pclavus_Galaxy_noshorts.fasta contam=rRNA,Pclavus_rRNA.fasta contam=Mt,Pclavus_mitoRNA.fasta table=Pclavus_Galaxy_contamination.txt passed=Pclavus_Galaxy_final.fasta" >> contam2
+echo 'conda activate bioperl' > contam2
+echo 'module load blast-plus-2.11.0-gcc-9.2.0-5tzbbls' >> contam2
+echo "perl ~/bin/RemoveContamSeq_blast+.pl type=blastn score=45 reads=Pclavus_Galaxy_noshorts.fasta contam=rRNA,Pclavus_rRNA.fasta contam=Mt,Pclavus_mitoRNA.fasta table=Pclavus_Galaxy_contamination.txt passed=Pclavus_Galaxy_clean.fasta" >> contam2
 launcher_creator.py -j contam2 -n contam2 -q mediumq7 -t 24:00:00 -e studivanms@gmail.com
 sbatch --mem=200GB contam2.slurm
 
-Pclavus_Trinity_final.fasta
+Pclavus_Trinity_clean.fasta
 -------------------------
 124595 sequences in input file
 1256 sequences look like contaminants
@@ -189,7 +186,7 @@ Pclavus_Trinity_final.fasta
 123339 sequences passed all tests
 -------------------------
 
-Pclavus_Galaxy_final.fasta
+Pclavus_Galaxy_clean.fasta
 -------------------------
 124645 sequences in input file
 268 sequences look like contaminants
@@ -198,16 +195,12 @@ Pclavus_Galaxy_final.fasta
 124645 sequences passed all tests
 -------------------------
 
-echo "seq_stats.pl Pclavus_Trinity_final.fasta > seqstats_Pclavus_Trinity_final.txt" > seq_stats3
-echo "seq_stats.pl Pclavus_Galaxy_final.fasta > seqstats_Pclavus_Galaxy_final.txt" >> seq_stats3
+echo "seq_stats.pl Pclavus_Trinity_clean.fasta > seqstats_Pclavus_Trinity_clean.txt" > seq_stats3
+echo "seq_stats.pl Pclavus_Galaxy_clean.fasta > seqstats_Pclavus_Galaxy_clean.txt" >> seq_stats3
 launcher_creator.py -j seq_stats3 -n seq_stats3 -q shortq7 -t 6:00:00 -e studivanms@gmail.com
 sbatch seq_stats3.slurm
 
-
-#------------------------------
-## Final assembly!
-
-Pclavus_Trinity_final.fasta
+Pclavus_Trinity_clean.fasta
 -------------------------
 123339 sequences.
 445 average length.
@@ -219,7 +212,7 @@ N50 = 421
 0 Mb of Ns. (0 bp, 0%)
 -------------------------
 
-Pclavus_Galaxy_final.fasta
+Pclavus_Galaxy_clean.fasta
 -------------------------
 124645 sequences.
 445 average length.
@@ -231,4 +224,189 @@ N50 = 422
 0 Mb of Ns. (0 bp, 0%)
 -------------------------
 
-# Now proceed with separation of host/symbiont contigs in the script 'Pclavus_transcriptome_hostsym_separation_README'
+# Now need to separate host/symbiont contigs into separate assemblies
+
+
+#------------------------------
+## Identify the most likely origin of each sequence by comparison to a protein DB from a single close relative and one or more databases of likely contaminants
+# NOTE: before running blast, must shorten fasta headers to avoid error messages in blast output - try this fix: 'sed -e 's/>* .*$//' original.fasta > truncated.fasta'
+
+sed -e 's/>* .*$//' Pclavus_Trinity_final.fasta > Pclavus_Trinity_trunc.fasta
+
+# Find the most closely related genome through Uniprot: https://www.uniprot.org/proteomes
+# For Pavona clavus, the closest relative is Pocillopora damicornis: https://www.uniprot.org/taxonomy/46731
+wget https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/reference_proteomes/Eukaryota/UP000275408/UP000275408_46731.fasta.gz
+
+# Closest zoox relative is Symbiodinium microadriaticum
+wget https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/reference_proteomes/Eukaryota/UP000186817/UP000186817_2951.fasta.gz
+
+gunzip *.gz &
+mv UP000275408_46731.fasta Pdamicornis.fasta
+mv UP000186817_2951.fasta Smicroadriaticum.fasta
+
+cat Pdamicornis.fasta| grep '>' | wc -l
+# 25282
+cat Smicroadriaticum.fasta| grep '>' | wc -l
+# 43269 -matches number in Uniprot
+
+# Truncate databases
+sed -e 's/>* .*$//' Pdamicornis.fasta > Pdamicornis_trunc.fasta
+sed -e 's/>* .*$//' Smicroadriaticum.fasta > Smicroadriaticum_trunc.fasta
+
+module load blast-plus-2.11.0-gcc-9.2.0-5tzbbls
+# Making a blast database for each reference
+echo "makeblastdb -in Pdamicornis_trunc.fasta -dbtype prot" >mdb
+echo "makeblastdb -in Smicroadriaticum_trunc.fasta -dbtype prot" >>mdb
+launcher_creator.py -j mdb -n mdb -q shortq7 -t 6:00:00 -e email@gmail.com
+sbatch mdb.slurm
+
+# Blasting against reference proteomes
+conda activate bioperl
+echo 'conda activate bioperl' > origin
+echo 'module load blast-plus-2.11.0-gcc-9.2.0-5tzbbls' >> origin
+echo "perl ~/bin/CompareContamSeq_blast+.pl -q Pclavus_clean.fasta -s 45 -t Pdamicornis_trunc.fasta -c Smicroadriaticum_trunc.fasta" >> origin
+launcher_creator.py -j origin -n origin -q mediumq7 -t 24:00:00 -e studivanms@gmail.com
+sbatch --mem=200GB origin.slurm
+
+345923 sequences input.
+119317 of these matched Pdamicornis_trunc.fasta more closely than any contaminants.
+74157 matched contaminants more closely than Pdamicornis_trunc.fasta.
+152449 matched none of the supplied DB (nomatch.screened.fasta).
+
+
+#------------------------------
+## Attempting to identify additional host/symbiont sequences in the no match assembly based on taxonomic ID of each sequence's best match in NCBI's nucleotide (nt) database
+
+# NOTE: nt and taxdb databases downloaded 28 December 2021
+mkdir ~/annotate/ncbi/nt
+cd ~/annotate/ncbi/nt
+
+echo 'update_blastdb.pl --decompress nt --passive' > get_nt
+launcher_creator.py -j get_nt -n get_nt -q mediumq7 -t 24:00:00 -e studivanms@gmail.com
+sbatch get_nt.slurm
+
+update_blastdb.pl taxdb
+tar -xzf taxdb.tar.gz
+
+# Now need to update your blastdb path to include the location of taxonomy database files
+nano ~/.bashrc
+# Add the following text:
+export BLASTDB="$HOME/annotate/ncbi/nt:$BLASTDB"
+# Save, then source to make the path active
+source ~/.bashrc
+
+# Split the no match assembly into 40 chunks to parallelize and decrease computing time per chunk
+splitFasta.pl nomatch.screened.fasta 40
+
+# Create list of commands for blasting each subset chunk
+for i in `ls subset*nomatch*.fasta`; do echo blastn -query $i -db ~/annotate/ncbi/nt/nt -evalue 0.0001 -num_threads 4 -max_target_seqs 5 -outfmt "'6 qseqid sseqid evalue pident stitle staxids sscinames scomnames sblastnames sskingdoms salltitles stitle'" -out $i.br; done > bl_nomatch
+launcher_creator.py -j bl_nomatch -n bl_nomatch -q mediumq7 -t 24:00:00 -e studivanms@gmail.com -N 10
+sbatch bl_nomatch.slurm
+
+# check blast progress
+cat subset*.br | wc -l
+# found matches in blast database for 29914 out of 152449 sequences
+
+# generate combined blast report
+cat subset*nomatch*.br > allblast.br
+
+# scp the allblast.br file to your computer and run the taxonomizr.R script
+
+
+#------------------------------
+## Once back from R script, scp output .txt files to your HPC directory
+
+# Use grep to generate a fasta file of the host/symbiont blast matches in the nomatch assembly
+grep -w -A 1 -f nomatch_symbiont.txt nomatch.screened.fasta --no-group-separator > nomatch_symbiont.fasta
+
+# The length should match the taxonomy matches in the taxonomizr.R script
+cat nomatch_symbiont.fasta| grep '>' | wc -l
+# 75
+
+grep -w -A 1 -f nomatch_host.txt nomatch.screened.fasta --no-group-separator > nomatch_host.fasta
+cat nomatch_host.fasta| grep '>' | wc -l
+# 507
+
+# Combine the host/symbiont nomatch assemblies with the original target/contam assemblies
+cat Smicroadriaticum_trunc.screened.fasta nomatch_symbiont.fasta > Gerakladium.fasta
+
+cat target.screened.fasta nomatch_host.fasta > Pclavus.fasta
+
+echo "seq_stats.pl Pclavus.fasta > seqstats_Pclavus.txt" > seq_stats
+echo "seq_stats.pl Gerakladium.fasta > seqstats_Gerakladium.txt" >> seq_stats
+launcher_creator.py -j seq_stats -n seq_stats -q shortq7 -t 6:00:00 -e studivanms@gmail.com
+sbatch seq_stats.slurm
+
+Pclavus.fasta
+-------------------------
+119824 sequences.
+1901 average length.
+26720 maximum length.
+60 minimum length.
+N50 = 2655
+227.8 Mb altogether (227777238 bp).
+0 ambiguous Mb. (0 bp, 0%)
+0 Mb of Ns. (0 bp, 0%)
+-------------------------
+
+Gerakladium.fasta
+-------------------------
+28670 sequences.
+1375 average length.
+21103 maximum length.
+400 minimum length.
+N50 = 1672
+39.4 Mb altogether (39418006 bp).
+0 ambiguous Mb. (0 bp, 0%)
+0 Mb of Ns. (0 bp, 0%)
+-------------------------
+
+
+#------------------------------
+## GC content with BBMap package
+
+scp the transcriptomes to your computer and follow the BBMap installation instructions here: https://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/installation-guide/
+
+sh bbmap/stats.sh in=Pclavus.fasta
+A	C	G	T	N	IUPAC	Other	GC	GC_stdev
+0.2706	0.2300	0.2288	0.2706	0.0000	0.0000	0.0000	0.4588	0.0569
+
+sh bbmap/stats.sh in=Gerakladium.fasta
+A	C	G	T	N	IUPAC	Other	GC	GC_stdev
+0.2041	0.2978	0.2926	0.2056	0.0000	0.0000	0.0000	0.5904	0.0403
+
+
+#------------------------------
+## Transcriptome completeness with gVolante/BUSCO
+
+# Upload the transcriptomes to gVolante here: https://gvolante.riken.jp/analysis.html
+# Use a cutoff length of '1', sequence type of 'Coding/transcribed (nucleotide)', ortholog search pipeline of 'BUSCO v5', and ortholog set of 'Metazoa' for host and 'Eukaryota' for symbiont
+
+Pclavus.fasta
+-------------------------
+Completeness Assessment Results:
+	Total # of core genes queried:    954
+	# of core genes detected
+		Complete:    887 (92.98%)
+		Complete + Partial:    904 (94.76%)
+	# of missing core genes:    50 (5.24%)
+	Average # of orthologs per core genes:    4.16
+	% of detected core genes that have more than 1 ortholog:    83.54
+	Scores in BUSCO format:    C:93.0%[S:15.3%,D:77.7%],F:1.8%,M:5.2%,n:954
+-------------------------
+
+Gerakladium.fasta
+-------------------------
+Completeness Assessment Results:
+	Total # of core genes queried:    255
+	# of core genes detected
+		Complete:    47 (18.43%)
+		Complete + Partial:    63 (24.71%)
+	# of missing core genes:    192 (75.29%)
+	Average # of orthologs per core genes:    1.17
+	% of detected core genes that have more than 1 ortholog:    8.51
+	Scores in BUSCO format:    C:18.5%[S:16.9%,D:1.6%],F:6.3%,M:75.2%,n:255
+-------------------------
+
+
+# Now follow the script 'Pclavus_transcriptome_annotation_README' for generating annotation files for differential expression analysis
