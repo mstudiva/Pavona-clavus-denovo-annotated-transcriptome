@@ -1,4 +1,4 @@
-## De novo transcriptome assembly pipeline for Pavona clavus, version December 29, 2024
+## De novo transcriptome assembly pipeline for Pavona clavus, version December 30, 2024
 # Adapted by Michael Studivan (studivanms@gmail.com) based on repos by Misha Matz (https://github.com/z0on/annotatingTranscriptomes.git), Eli Meyer (https://github.com/Eli-Meyer/sequence_utilities.git; https://github.com/Eli-Meyer/transcriptome_utilities.git), and  Brian Strehlow (https://github.com/bstrehlow/Transcriptome_assembly.git) for use on the FAU KoKo HPC
 
 
@@ -171,11 +171,16 @@ echo "perl ~/bin/RemoveContamSeq_blast+.pl type=blastn score=45 reads=Pclavus_Tr
 launcher_creator.py -j contam -n contam -q mediumq7 -t 24:00:00 -e studivanms@gmail.com
 sbatch --mem=200GB contam.slurm
 
+# ExcludeFasta_v2.pl is failing due to a Bioperl error, so run it on its own
+srun perl ~/bin/ExcludeFasta_v2.pl Pclavus_Trinity_contamination.txt Pclavus_Trinity_clean.fasta > Pclavus_Trinity_clean2.fasta
+
 echo 'conda activate bioperl' > contam2
 echo 'module load blast-plus-2.11.0-gcc-9.2.0-5tzbbls' >> contam2
 echo "perl ~/bin/RemoveContamSeq_blast+.pl type=blastn score=45 reads=Pclavus_Galaxy_noshorts.fasta contam=rRNA,Pclavus_rRNA.fasta contam=Mt,Pclavus_mitoRNA.fasta table=Pclavus_Galaxy_contamination.txt passed=Pclavus_Galaxy_clean.fasta" >> contam2
 launcher_creator.py -j contam2 -n contam2 -q mediumq7 -t 24:00:00 -e studivanms@gmail.com
 sbatch --mem=200GB contam2.slurm
+
+srun perl ~/bin/ExcludeFasta_v2.pl Pclavus_Galaxy_contamination.txt Pclavus_Galaxy_clean.fasta > Pclavus_Galaxy_clean2.fasta
 
 Pclavus_Trinity_clean.fasta
 -------------------------
@@ -189,10 +194,10 @@ Pclavus_Trinity_clean.fasta
 Pclavus_Galaxy_clean.fasta
 -------------------------
 124645 sequences in input file
-268 sequences look like contaminants
+1233 sequences look like contaminants
+        rRNA    965
         Mt	268
-        rRNA    0
-124645 sequences passed all tests
+123412 sequences passed all tests
 -------------------------
 
 echo "seq_stats.pl Pclavus_Trinity_clean.fasta > seqstats_Pclavus_Trinity_clean.txt" > seq_stats3
@@ -214,12 +219,12 @@ N50 = 421
 
 Pclavus_Galaxy_clean.fasta
 -------------------------
-124645 sequences.
+123412 sequences.
 445 average length.
 12396 maximum length.
 300 minimum length.
 N50 = 422
-55.5 Mb altogether (55454713 bp).
+54.9 Mb altogether (54871003 bp).
 0 ambiguous Mb. (0 bp, 0%)
 0 Mb of Ns. (0 bp, 0%)
 -------------------------
@@ -229,9 +234,6 @@ N50 = 422
 
 #------------------------------
 ## Identify the most likely origin of each sequence by comparison to a protein DB from a single close relative and one or more databases of likely contaminants
-# NOTE: before running blast, must shorten fasta headers to avoid error messages in blast output - try this fix: 'sed -e 's/>* .*$//' original.fasta > truncated.fasta'
-
-# sed -e 's/>* .*$//' Pclavus_Trinity_final.fasta > Pclavus_Trinity_trunc.fasta
 
 # Find the most closely related genome through Uniprot: https://www.uniprot.org/proteomes
 # For Pavona clavus, the closest relative is Pocillopora meandrina: https://www.uniprot.org/taxonomy/46732
@@ -248,10 +250,6 @@ cat Pmeandrina.fasta| grep '>' | wc -l
 cat Smicroadriaticum.fasta| grep '>' | wc -l
 # 43302 -matches number in Uniprot
 
-# Truncate databases
-sed -e 's/>* .*$//' Pmeandrina.fasta > Pmeandrina_trunc.fasta
-sed -e 's/>* .*$//' Smicroadriaticum.fasta > Smicroadriaticum_trunc.fasta
-
 module load blast-plus-2.11.0-gcc-9.2.0-5tzbbls
 # Making a blast database for each reference
 echo "makeblastdb -in Pmeandrina.fasta -dbtype prot" >mdb
@@ -263,20 +261,34 @@ sbatch mdb.slurm
 conda activate bioperl
 echo 'conda activate bioperl' > origin
 echo 'module load blast-plus-2.11.0-gcc-9.2.0-5tzbbls' >> origin
-echo "perl ~/bin/CompareContamSeq_blast+.pl -q Pclavus_clean.fasta -s 45 -t Pmeandrina.fasta -c Smicroadriaticum.fasta" >> origin
-launcher_creator.py -j origin -n origin -q mediumq7 -t 24:00:00 -e studivanms@gmail.com
+echo "perl ~/bin/CompareContamSeq_blast+.pl -q Pclavus_Trinity_clean.fasta -s 45 -t Pmeandrina.fasta -c Smicroadriaticum.fasta" >> origin
+launcher_creator.py -j origin -n origin -q shortq7 -t 6:00:00 -e studivanms@gmail.com
 sbatch --mem=200GB origin.slurm
 
-345923 sequences input.
-119317 of these matched Pmeandrina.fasta more closely than any contaminants.
-74157 matched contaminants more closely than Pmeandrina.fasta.
-152449 matched none of the supplied DB (nomatch.screened.fasta).
+echo 'conda activate bioperl' > origin2
+echo 'module load blast-plus-2.11.0-gcc-9.2.0-5tzbbls' >> origin2
+echo "perl ~/bin/CompareContamSeq_blast+.pl -q Pclavus_Galaxy_clean.fasta -s 45 -t Pmeandrina.fasta -c Smicroadriaticum.fasta" >> origin2
+launcher_creator.py -j origin2 -n origin2 -q shortq7 -t 6:00:00 -e studivanms@gmail.com
+sbatch --mem=200GB origin2.slurm
+
+Pclavus_Trinity_clean.fasta
+-------------------------
+123339 sequences input.
+33735 of these matched Pmeandrina.fasta more closely than any contaminants.
+11462 matched contaminants more closely than Pmeandrina.fasta.
+78142 matched none of the supplied DB (nomatch.screened.fasta).
+-------------------------
+
+Pclavus_Galaxy_clean.fasta
+-------------------------
+
+-------------------------
 
 
 #------------------------------
 ## Attempting to identify additional host/symbiont sequences in the no match assembly based on taxonomic ID of each sequence's best match in NCBI's nucleotide (nt) database
 
-# NOTE: nt and taxdb databases downloaded 28 December 2021
+# NOTE: nt and taxdb databases downloaded 30 December 2024
 mkdir ~/annotate/ncbi/nt
 cd ~/annotate/ncbi/nt
 
@@ -284,7 +296,7 @@ echo 'update_blastdb.pl --decompress nt --passive' > get_nt
 launcher_creator.py -j get_nt -n get_nt -q mediumq7 -t 24:00:00 -e studivanms@gmail.com
 sbatch get_nt.slurm
 
-update_blastdb.pl taxdb
+srun update_blastdb.pl taxdb
 tar -xzf taxdb.tar.gz
 
 # Now need to update your blastdb path to include the location of taxonomy database files
@@ -294,12 +306,12 @@ export BLASTDB="$HOME/annotate/ncbi/nt:$BLASTDB"
 # Save, then source to make the path active
 source ~/.bashrc
 
-# Split the no match assembly into 40 chunks to parallelize and decrease computing time per chunk
-splitFasta.pl nomatch.screened.fasta 40
+# Split the no match assembly into 80 chunks to parallelize and decrease computing time per chunk (shooting for <1000 sequences per chunk)
+splitFasta.pl nomatch.screened.fasta 80
 
 # Create list of commands for blasting each subset chunk
 for i in `ls subset*nomatch*.fasta`; do echo blastn -query $i -db ~/annotate/ncbi/nt/nt -evalue 0.0001 -num_threads 4 -max_target_seqs 5 -outfmt "'6 qseqid sseqid evalue pident stitle staxids sscinames scomnames sblastnames sskingdoms salltitles stitle'" -out $i.br; done > bl_nomatch
-launcher_creator.py -j bl_nomatch -n bl_nomatch -q mediumq7 -t 24:00:00 -e studivanms@gmail.com -N 10
+launcher_creator.py -j bl_nomatch -n bl_nomatch -q shortq7 -t 6:00:00 -e studivanms@gmail.com
 sbatch bl_nomatch.slurm
 
 # check blast progress
