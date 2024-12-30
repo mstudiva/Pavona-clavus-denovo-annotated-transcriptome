@@ -102,8 +102,8 @@ N50 = 334
 # Assemblies include many small contigs that are unlikely to provide significant matches, so for analyses based on sequence homology we consider only contigs ≥300 bp.
 
 conda activate bioperl
-echo "perl ~/bin/noshorts.pl Pclavus_Trinity.fasta 300" > noshorts
-echo "perl ~/bin/noshorts.pl Pclavus_Galaxy.fasta 300" >> noshorts
+echo "perl ~/bin/noshorts_v2.pl Pclavus_Trinity.fasta 300" > noshorts
+echo "perl ~/bin/noshorts_v2.pl Pclavus_Galaxy.fasta 300" >> noshorts
 launcher_creator.py -j noshorts -n noshorts -q shortq7 -t 6:00:00 -e studivanms@gmail.com
 sbatch noshorts.slurm
 
@@ -231,32 +231,31 @@ N50 = 422
 ## Identify the most likely origin of each sequence by comparison to a protein DB from a single close relative and one or more databases of likely contaminants
 # NOTE: before running blast, must shorten fasta headers to avoid error messages in blast output - try this fix: 'sed -e 's/>* .*$//' original.fasta > truncated.fasta'
 
-sed -e 's/>* .*$//' Pclavus_Trinity_final.fasta > Pclavus_Trinity_trunc.fasta
+# sed -e 's/>* .*$//' Pclavus_Trinity_final.fasta > Pclavus_Trinity_trunc.fasta
 
 # Find the most closely related genome through Uniprot: https://www.uniprot.org/proteomes
-# For Pavona clavus, the closest relative is Pocillopora damicornis: https://www.uniprot.org/taxonomy/46731
-wget https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/reference_proteomes/Eukaryota/UP000275408/UP000275408_46731.fasta.gz
+# For Pavona clavus, the closest relative is Pocillopora meandrina: https://www.uniprot.org/taxonomy/46732
+# Closest zoox relative is Symbiodinium microadriaticum: https://www.uniprot.org/taxonomy/2951
+# Download the proteome assemblies through 'Browse all ##,### entries' then download as '(FASTA) canonical & isoform'
+# Finally, scp to your working directory
 
-# Closest zoox relative is Symbiodinium microadriaticum
-wget https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/reference_proteomes/Eukaryota/UP000186817/UP000186817_2951.fasta.gz
+gunzip *.gz
+mv uniprotkb_taxonomy_id_46732_2024_12_30.fasta Pmeandrina.fasta
+mv uniprotkb_taxonomy_id_2951_2024_12_30.fasta Smicroadriaticum.fasta
 
-gunzip *.gz &
-mv UP000275408_46731.fasta Pdamicornis.fasta
-mv UP000186817_2951.fasta Smicroadriaticum.fasta
-
-cat Pdamicornis.fasta| grep '>' | wc -l
-# 25282
+cat Pmeandrina.fasta| grep '>' | wc -l
+# 31995 -matches number in Uniprot
 cat Smicroadriaticum.fasta| grep '>' | wc -l
-# 43269 -matches number in Uniprot
+# 43302 -matches number in Uniprot
 
 # Truncate databases
-sed -e 's/>* .*$//' Pdamicornis.fasta > Pdamicornis_trunc.fasta
+sed -e 's/>* .*$//' Pmeandrina.fasta > Pmeandrina_trunc.fasta
 sed -e 's/>* .*$//' Smicroadriaticum.fasta > Smicroadriaticum_trunc.fasta
 
 module load blast-plus-2.11.0-gcc-9.2.0-5tzbbls
 # Making a blast database for each reference
-echo "makeblastdb -in Pdamicornis_trunc.fasta -dbtype prot" >mdb
-echo "makeblastdb -in Smicroadriaticum_trunc.fasta -dbtype prot" >>mdb
+echo "makeblastdb -in Pmeandrina.fasta -dbtype prot" >mdb
+echo "makeblastdb -in Smicroadriaticum.fasta -dbtype prot" >>mdb
 launcher_creator.py -j mdb -n mdb -q shortq7 -t 6:00:00 -e email@gmail.com
 sbatch mdb.slurm
 
@@ -264,13 +263,13 @@ sbatch mdb.slurm
 conda activate bioperl
 echo 'conda activate bioperl' > origin
 echo 'module load blast-plus-2.11.0-gcc-9.2.0-5tzbbls' >> origin
-echo "perl ~/bin/CompareContamSeq_blast+.pl -q Pclavus_clean.fasta -s 45 -t Pdamicornis_trunc.fasta -c Smicroadriaticum_trunc.fasta" >> origin
+echo "perl ~/bin/CompareContamSeq_blast+.pl -q Pclavus_clean.fasta -s 45 -t Pmeandrina.fasta -c Smicroadriaticum.fasta" >> origin
 launcher_creator.py -j origin -n origin -q mediumq7 -t 24:00:00 -e studivanms@gmail.com
 sbatch --mem=200GB origin.slurm
 
 345923 sequences input.
-119317 of these matched Pdamicornis_trunc.fasta more closely than any contaminants.
-74157 matched contaminants more closely than Pdamicornis_trunc.fasta.
+119317 of these matched Pmeandrina.fasta more closely than any contaminants.
+74157 matched contaminants more closely than Pmeandrina.fasta.
 152449 matched none of the supplied DB (nomatch.screened.fasta).
 
 
