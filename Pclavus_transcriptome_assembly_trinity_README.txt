@@ -1,4 +1,4 @@
-## De novo transcriptome assembly pipeline for Pavona clavus, version December 30, 2024
+## De novo transcriptome assembly pipeline for Pavona clavus, version December 31, 2024
 # Adapted by Michael Studivan (studivanms@gmail.com) based on repos by Misha Matz (https://github.com/z0on/annotatingTranscriptomes.git), Eli Meyer (https://github.com/Eli-Meyer/sequence_utilities.git; https://github.com/Eli-Meyer/transcriptome_utilities.git), and  Brian Strehlow (https://github.com/bstrehlow/Transcriptome_assembly.git) for use on the FAU KoKo HPC
 
 
@@ -310,10 +310,12 @@ source ~/.bashrc
 # Split the no match assembly into 80 chunks to parallelize and decrease computing time per chunk (shooting for <1000 sequences per chunk)
 splitFasta.pl nomatch.screened.fasta 80
 
-conda create -n blast_env
+conda create -n blast_env perl-bioperl blast openssl
 conda activate blast_env
-conda install -c bioconda blast
-conda install -c bioconda perl-bioperl
+conda install bioconda::perl-bioperl
+conda install conda-forge::mamba
+conda install bioconda::perl-digest-md5
+conda install bioconda::blast
 
 conda activate blast_env
 module load blast-plus-2.11.0-gcc-9.2.0-5tzbbls
