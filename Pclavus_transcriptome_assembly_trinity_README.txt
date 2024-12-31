@@ -292,8 +292,9 @@ Pclavus_Galaxy_clean.fasta
 mkdir ~/annotate/ncbi/nt
 cd ~/annotate/ncbi/nt
 
-echo 'update_blastdb.pl --decompress nt --passive' > get_nt
-launcher_creator.py -j get_nt -n get_nt -q mediumq7 -t 24:00:00 -e studivanms@gmail.com
+echo 'conda activate blast_env' > get_nt
+echo 'update_blastdb.pl --decompress nt --passive' >> get_nt
+launcher_creator.py -j get_nt -n get_nt -q mediumq7 -t 12:00:00 -e studivanms@gmail.com
 sbatch get_nt.slurm
 
 srun update_blastdb.pl taxdb
@@ -309,9 +310,20 @@ source ~/.bashrc
 # Split the no match assembly into 80 chunks to parallelize and decrease computing time per chunk (shooting for <1000 sequences per chunk)
 splitFasta.pl nomatch.screened.fasta 80
 
+conda create -n blast_env
+conda activate blast_env
+conda install -c bioconda blast
+conda install -c bioconda perl-bioperl
+
+conda activate blast_env
+module load blast-plus-2.11.0-gcc-9.2.0-5tzbbls
+echo 'conda activate bioperl' > bl_nomatch
+echo 'module load blast-plus-2.11.0-gcc-9.2.0-5tzbbls' >> bl_nomatch
 # Create list of commands for blasting each subset chunk
-for i in `ls subset*nomatch*.fasta`; do echo blastn -query $i -db ~/annotate/ncbi/nt/nt -evalue 0.0001 -num_threads 4 -max_target_seqs 5 -outfmt "'6 qseqid sseqid evalue pident stitle staxids sscinames scomnames sblastnames sskingdoms salltitles stitle'" -out $i.br; done > bl_nomatch
-launcher_creator.py -j bl_nomatch -n bl_nomatch -q shortq7 -t 6:00:00 -e studivanms@gmail.com
+for i in subset*nomatch*.fasta; do
+  printf "blastn -query \"%s\" -db ~/annotate/ncbi/nt/nt -evalue 0.0001 -num_threads 4 -max_target_seqs 5 -outfmt \"6 qseqid sseqid evalue pident stitle staxids sscinames scomnames sblastnames sskingdoms salltitles stitle\" -out \"%s.br\"\n" "$i" "$i";
+done > bl_nomatch
+launcher_creator.py -j bl_nomatch -n bl_nomatch -q shortq7 -t 6:00:00 -e studivanms@gmail.com -N 5
 sbatch bl_nomatch.slurm
 
 # check blast progress
