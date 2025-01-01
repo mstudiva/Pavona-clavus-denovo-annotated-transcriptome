@@ -1,4 +1,4 @@
-## De novo transcriptome assembly pipeline for Pavona clavus, version December 31, 2024
+## De novo transcriptome assembly pipeline for Pavona clavus, version January 1, 2025
 # Adapted by Michael Studivan (studivanms@gmail.com) based on repos by Misha Matz (https://github.com/z0on/annotatingTranscriptomes.git), Eli Meyer (https://github.com/Eli-Meyer/sequence_utilities.git; https://github.com/Eli-Meyer/transcriptome_utilities.git), and  Brian Strehlow (https://github.com/bstrehlow/Transcriptome_assembly.git) for use on the FAU KoKo HPC
 
 
@@ -314,9 +314,7 @@ source ~/.bashrc
 splitFasta.pl nomatch.screened.fasta 80
 
 conda activate blast
-module load blast-plus-2.11.0-gcc-9.2.0-5tzbbls
-echo 'conda activate bioperl' > bl_nomatch
-echo 'module load blast-plus-2.11.0-gcc-9.2.0-5tzbbls' >> bl_nomatch
+echo 'conda activate blast' > bl_nomatch
 # Create list of commands for blasting each subset chunk
 for i in subset*nomatch*.fasta; do
   printf "blastn -query \"%s\" -db ~/annotate/ncbi/nt/nt -evalue 0.0001 -num_threads 4 -max_target_seqs 5 -outfmt \"6 qseqid sseqid evalue pident stitle staxids sscinames scomnames sblastnames sskingdoms salltitles stitle\" -out \"%s.br\"\n" "$i" "$i";
@@ -326,7 +324,8 @@ sbatch bl_nomatch.slurm
 
 # check blast progress
 cat subset*.br | wc -l
-# found matches in blast database for 29914 out of 152449 sequences
+# found 976165 matches in blast database for 78142 sequences (Trinity)
+# found 976165 matches in blast database for 78142 sequences (Galaxy)
 
 # generate combined blast report
 cat subset*nomatch*.br > allblast.br
