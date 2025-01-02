@@ -1,4 +1,4 @@
-## De novo transcriptome assembly pipeline for Pavona clavus, version January 1, 2025
+## De novo transcriptome assembly pipeline for Pavona clavus, version January 2, 2025
 # Adapted by Michael Studivan (studivanms@gmail.com) based on repos by Misha Matz (https://github.com/z0on/annotatingTranscriptomes.git), Eli Meyer (https://github.com/Eli-Meyer/sequence_utilities.git; https://github.com/Eli-Meyer/transcriptome_utilities.git), and  Brian Strehlow (https://github.com/bstrehlow/Transcriptome_assembly.git) for use on the FAU KoKo HPC
 
 
@@ -350,7 +350,7 @@ sbatch --mem=200GB nomatch_host.slurm
 
 cat nomatch_host.fasta | grep '>' | wc -l
 #  (Trinity)
-#  (Galaxy)
+# 21308 (Galaxy)
 
 # Combine the host/symbiont nomatch assemblies with the original target/contam assemblies
 cat Smicroadriaticum.screened.fasta nomatch_symbiont.fasta > Cladocopium.fasta
