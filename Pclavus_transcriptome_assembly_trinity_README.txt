@@ -281,7 +281,10 @@ Pclavus_Trinity_clean.fasta
 
 Pclavus_Galaxy_clean.fasta
 -------------------------
-
+123412 sequences input.
+33783 of these matched Pmeandrina.fasta more closely than any contaminants.
+11450 matched contaminants more closely than Pmeandrina.fasta.
+78179 matched none of the supplied DB (nomatch.screened.fasta).
 -------------------------
 
 
@@ -324,11 +327,13 @@ sbatch bl_nomatch.slurm
 
 # check blast progress
 cat subset*.br | wc -l
-# found 976165 matches in blast database for 78142 sequences (Trinity)
-# found 976165 matches in blast database for 78142 sequences (Galaxy)
+# found 966470 matches in blast database for 78142 sequences (Trinity)
+# found 976165 matches in blast database for 78179 sequences (Galaxy)
 
 # generate combined blast report
 cat subset*nomatch*.br > allblast.br
+# clean up
+rm subset*
 
 # scp the allblast.br file to your computer and run the taxonomizr.R script
 
@@ -340,60 +345,69 @@ cat subset*nomatch*.br > allblast.br
 grep -w -A 1 -f nomatch_symbiont.txt nomatch.screened.fasta --no-group-separator > nomatch_symbiont.fasta
 
 # The length should match the taxonomy matches in the taxonomizr.R script
-cat nomatch_symbiont.fasta| grep '>' | wc -l
-# 75
+cat nomatch_symbiont.fasta | grep '>' | wc -l
+# 131 (Trinity)
+# 126 (Galaxy)
 
-grep -w -A 1 -f nomatch_host.txt nomatch.screened.fasta --no-group-separator > nomatch_host.fasta
-cat nomatch_host.fasta| grep '>' | wc -l
-# 507
+echo "grep -w -A 1 -f nomatch_host.txt nomatch.screened.fasta --no-group-separator > nomatch_host.fasta" > nomatch_host
+launcher_creator.py -j nomatch_host -n nomatch_host -q shortq7 -t 6:00:00 -e studivanms@gmail.com
+sbatch --mem=200GB nomatch_host.slurm
+
+cat nomatch_host.fasta | grep '>' | wc -l
+# 507 (Trinity)
+#  (Galaxy)
 
 # Combine the host/symbiont nomatch assemblies with the original target/contam assemblies
-cat Smicroadriaticum_trunc.screened.fasta nomatch_symbiont.fasta > Gerakladium.fasta
+cat Smicroadriaticum.screened.fasta nomatch_symbiont.fasta > Cladocopium.fasta
 
 cat target.screened.fasta nomatch_host.fasta > Pclavus.fasta
 
 echo "seq_stats.pl Pclavus.fasta > seqstats_Pclavus.txt" > seq_stats
-echo "seq_stats.pl Gerakladium.fasta > seqstats_Gerakladium.txt" >> seq_stats
+echo "seq_stats.pl Cladocopium.fasta > seqstats_Cladocopium.txt" >> seq_stats
 launcher_creator.py -j seq_stats -n seq_stats -q shortq7 -t 6:00:00 -e studivanms@gmail.com
 sbatch seq_stats.slurm
 
-Pclavus.fasta
--------------------------
-119824 sequences.
-1901 average length.
-26720 maximum length.
-60 minimum length.
-N50 = 2655
-227.8 Mb altogether (227777238 bp).
-0 ambiguous Mb. (0 bp, 0%)
-0 Mb of Ns. (0 bp, 0%)
+Pclavus.fasta (Trinity)
 -------------------------
 
-Gerakladium.fasta
 -------------------------
-28670 sequences.
-1375 average length.
-21103 maximum length.
-400 minimum length.
-N50 = 1672
-39.4 Mb altogether (39418006 bp).
-0 ambiguous Mb. (0 bp, 0%)
-0 Mb of Ns. (0 bp, 0%)
+
+Cladocopium.fasta (Trinity)
+-------------------------
+
+-------------------------
+
+Pclavus.fasta (Galaxy)
+-------------------------
+
+-------------------------
+
+Cladocopium.fasta (Galaxy)
+-------------------------
+
 -------------------------
 
 
 #------------------------------
 ## GC content with BBMap package
 
-scp the transcriptomes to your computer and follow the BBMap installation instructions here: https://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/installation-guide/
+scp the transcriptomes to your computer and follow the BBMap installation instructions here: https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/installation-guide/
 
-sh bbmap/stats.sh in=Pclavus.fasta
-A	C	G	T	N	IUPAC	Other	GC	GC_stdev
-0.2706	0.2300	0.2288	0.2706	0.0000	0.0000	0.0000	0.4588	0.0569
+sh ~/bin/bbmap/stats.sh in=Pclavus.fasta
+# (Trinity)
 
-sh bbmap/stats.sh in=Gerakladium.fasta
+sh ~/bin/bbmap/stats.sh in=Cladocopium.fasta
 A	C	G	T	N	IUPAC	Other	GC	GC_stdev
-0.2041	0.2978	0.2926	0.2056	0.0000	0.0000	0.0000	0.5904	0.0403
+0.2371	0.2626	0.2634	0.2369	0.0000	0.0000	0.0000	0.5260	0.0529
+# (Trinity)
+
+sh ~/bin/bbmap/stats.sh in=Pclavus.fasta
+# (Galaxy)
+
+sh ~/bin/bbmap/stats.sh in=Cladocopium.fasta
+A	C	G	T	N	IUPAC	Other	GC	GC_stdev
+0.2371	0.2627	0.2635	0.2367	0.0000	0.0000	0.0000	0.5262	0.0527
+# (Galaxy)
 
 
 #------------------------------
@@ -402,31 +416,40 @@ A	C	G	T	N	IUPAC	Other	GC	GC_stdev
 # Upload the transcriptomes to gVolante here: https://gvolante.riken.jp/analysis.html
 # Use a cutoff length of '1', sequence type of 'Coding/transcribed (nucleotide)', ortholog search pipeline of 'BUSCO v5', and ortholog set of 'Metazoa' for host and 'Eukaryota' for symbiont
 
-Pclavus.fasta
--------------------------
-Completeness Assessment Results:
-	Total # of core genes queried:    954
-	# of core genes detected
-		Complete:    887 (92.98%)
-		Complete + Partial:    904 (94.76%)
-	# of missing core genes:    50 (5.24%)
-	Average # of orthologs per core genes:    4.16
-	% of detected core genes that have more than 1 ortholog:    83.54
-	Scores in BUSCO format:    C:93.0%[S:15.3%,D:77.7%],F:1.8%,M:5.2%,n:954
+Pclavus.fasta (Trinity)
 -------------------------
 
-Gerakladium.fasta
 -------------------------
-Completeness Assessment Results:
-	Total # of core genes queried:    255
-	# of core genes detected
-		Complete:    47 (18.43%)
-		Complete + Partial:    63 (24.71%)
-	# of missing core genes:    192 (75.29%)
-	Average # of orthologs per core genes:    1.17
-	% of detected core genes that have more than 1 ortholog:    8.51
-	Scores in BUSCO format:    C:18.5%[S:16.9%,D:1.6%],F:6.3%,M:75.2%,n:255
+
+Cladocopium.fasta (Trinity)
 -------------------------
+Total number of core genes queried	255
+Number of core genes detected
+  Complete	4 (1.57%)
+  Complete + Partial	22 (8.63%)
+Number of missing core genes	233 (91.37%)
+Average number of orthologs per core genes	1.00
+% of detected core genes that have more than 1 ortholog	0.00
+Scores in BUSCO format	C:1.6%[S:1.6%,D:0.0%],F:7.1%,M:91.3%
+-------------------------
+
+Pclavus.fasta (Galaxy)
+-------------------------
+
+-------------------------
+
+Cladocopium.fasta (Galaxy)
+-------------------------
+Total number of core genes queried	255
+Number of core genes detected
+  Complete	4 (1.57%)
+  Complete + Partial	22 (8.63%)
+Number of missing core genes	233 (91.37%)
+Average number of orthologs per core genes	1.00
+% of detected core genes that have more than 1 ortholog	0.00
+Scores in BUSCO format	C:1.6%[S:1.6%,D:0.0%],F:7.1%,M:91.3%
+-------------------------
+# The BUSCO scores (completeness) are really low for symbionts due to poor coverage in Tag-Seq sequencing, so we will not use these assemblies for alignment
 
 
 # Now follow the script 'Pclavus_transcriptome_annotation_README' for generating annotation files for differential expression analysis
