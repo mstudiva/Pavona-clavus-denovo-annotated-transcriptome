@@ -325,11 +325,6 @@ done > bl_nomatch
 launcher_creator.py -j bl_nomatch -n bl_nomatch -q shortq7 -t 6:00:00 -e studivanms@gmail.com -N 5
 sbatch bl_nomatch.slurm
 
-# check blast progress
-cat subset*.br | wc -l
-# found 966470 matches in blast database for 78142 sequences (Trinity)
-# found 976165 matches in blast database for 78179 sequences (Galaxy)
-
 # generate combined blast report
 cat subset*nomatch*.br > allblast.br
 # clean up
@@ -354,7 +349,7 @@ launcher_creator.py -j nomatch_host -n nomatch_host -q shortq7 -t 6:00:00 -e stu
 sbatch --mem=200GB nomatch_host.slurm
 
 cat nomatch_host.fasta | grep '>' | wc -l
-# 507 (Trinity)
+#  (Trinity)
 #  (Galaxy)
 
 # Combine the host/symbiont nomatch assemblies with the original target/contam assemblies
