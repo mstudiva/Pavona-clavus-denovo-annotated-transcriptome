@@ -345,7 +345,7 @@ cat nomatch_symbiont.fasta | grep '>' | wc -l
 # 126 (Galaxy)
 
 echo "grep -w -A 1 -f nomatch_host.txt nomatch.screened.fasta --no-group-separator > nomatch_host.fasta" > nomatch_host
-launcher_creator.py -j nomatch_host -n nomatch_host -q shortq7 -t 6:00:00 -e studivanms@gmail.com
+launcher_creator.py -j nomatch_host -n nomatch_host -q mediumq7 -t 12:00:00 -e studivanms@gmail.com
 sbatch --mem=200GB nomatch_host.slurm
 
 cat nomatch_host.fasta | grep '>' | wc -l
