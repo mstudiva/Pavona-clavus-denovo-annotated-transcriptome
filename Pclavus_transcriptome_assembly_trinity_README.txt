@@ -349,7 +349,7 @@ launcher_creator.py -j nomatch_host -n nomatch_host -q mediumq7 -t 12:00:00 -e s
 sbatch --mem=200GB nomatch_host.slurm
 
 cat nomatch_host.fasta | grep '>' | wc -l
-#  (Trinity)
+# 21305 (Trinity)
 # 21308 (Galaxy)
 
 # Combine the host/symbiont nomatch assemblies with the original target/contam assemblies
@@ -364,22 +364,50 @@ sbatch seq_stats.slurm
 
 Pclavus.fasta (Trinity)
 -------------------------
-
+55040 sequences.
+351 average length.
+8914 maximum length.
+60 minimum length.
+N50 = 519
+19.3 Mb altogether (19304823 bp).
+0 ambiguous Mb. (0 bp, 0%)
+0 Mb of Ns. (0 bp, 0%)
 -------------------------
 
 Cladocopium.fasta (Trinity)
 -------------------------
-
+11593 sequences.
+388 average length.
+12396 maximum length.
+60 minimum length.
+N50 = 359
+4.5 Mb altogether (4500119 bp).
+0 ambiguous Mb. (0 bp, 0%)
+0 Mb of Ns. (0 bp, 0%)
 -------------------------
 
 Pclavus.fasta (Galaxy)
 -------------------------
-
+55091 sequences.
+351 average length.
+8914 maximum length.
+60 minimum length.
+N50 = 519
+19.3 Mb altogether (19331252 bp).
+0 ambiguous Mb. (0 bp, 0%)
+0 Mb of Ns. (0 bp, 0%)
 -------------------------
 
 Cladocopium.fasta (Galaxy)
 -------------------------
-
+11576 sequences.
+388 average length.
+12396 maximum length.
+60 minimum length.
+N50 = 359
+4.5 Mb altogether (4492097 bp).
+0 ambiguous Mb. (0 bp, 0%)
+0 Mb of Ns. (0 bp, 0%)
 -------------------------
 
 
@@ -389,6 +417,8 @@ Cladocopium.fasta (Galaxy)
 scp the transcriptomes to your computer and follow the BBMap installation instructions here: https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/installation-guide/
 
 sh ~/bin/bbmap/stats.sh in=Pclavus.fasta
+A	C	G	T	N	IUPAC	Other	GC	GC_stdev
+0.2895	0.2096	0.2086	0.2923	0.0000	0.0000	0.0000	0.4182	0.0697
 # (Trinity)
 
 sh ~/bin/bbmap/stats.sh in=Cladocopium.fasta
@@ -397,6 +427,8 @@ A	C	G	T	N	IUPAC	Other	GC	GC_stdev
 # (Trinity)
 
 sh ~/bin/bbmap/stats.sh in=Pclavus.fasta
+A	C	G	T	N	IUPAC	Other	GC	GC_stdev
+0.2896	0.2097	0.2085	0.2922	0.0000	0.0000	0.0000	0.4182	0.0698
 # (Galaxy)
 
 sh ~/bin/bbmap/stats.sh in=Cladocopium.fasta
@@ -413,7 +445,14 @@ A	C	G	T	N	IUPAC	Other	GC	GC_stdev
 
 Pclavus.fasta (Trinity)
 -------------------------
-
+Total number of core genes queried	954
+Number of core genes detected
+  Complete	176 (18.45%)
+  Complete + Partial	465 (48.74%)
+Number of missing core genes	489 (51.26%)
+Average number of orthologs per core genes	1.22
+% of detected core genes that have more than 1 ortholog	16.48
+Scores in BUSCO format	C:18.4%[S:15.4%,D:3.0%],F:30.3%,M:51.3%
 -------------------------
 
 Cladocopium.fasta (Trinity)
@@ -430,7 +469,14 @@ Scores in BUSCO format	C:1.6%[S:1.6%,D:0.0%],F:7.1%,M:91.3%
 
 Pclavus.fasta (Galaxy)
 -------------------------
-
+Total number of core genes queried	954
+Number of core genes detected
+  Complete	176 (18.45%)
+  Complete + Partial	466 (48.85%)
+Number of missing core genes	488 (51.15%)
+Average number of orthologs per core genes	1.23
+% of detected core genes that have more than 1 ortholog	14.77
+Scores in BUSCO format	C:18.4%[S:15.7%,D:2.7%],F:30.4%,M:51.2%
 -------------------------
 
 Cladocopium.fasta (Galaxy)
