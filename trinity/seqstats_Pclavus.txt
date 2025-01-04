@@ -1,0 +1,13 @@
+
+Pclavus.fasta
+-------------------------
+55040 sequences.
+351 average length.
+8914 maximum length.
+60 minimum length.
+N50 = 519
+19.3 Mb altogether (19304823 bp).
+0 ambiguous Mb. (0 bp, 0%)
+0 Mb of Ns. (0 bp, 0%)
+-------------------------
+

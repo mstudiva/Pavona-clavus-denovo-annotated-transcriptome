@@ -1,0 +1,13 @@
+
+Pclavus_Galaxy_clean.fasta
+-------------------------
+123412 sequences.
+445 average length.
+12396 maximum length.
+300 minimum length.
+N50 = 422
+54.9 Mb altogether (54871003 bp).
+0 ambiguous Mb. (0 bp, 0%)
+0 Mb of Ns. (0 bp, 0%)
+-------------------------
+

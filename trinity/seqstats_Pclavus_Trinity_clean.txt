@@ -1,0 +1,13 @@
+
+Pclavus_Trinity_clean.fasta
+-------------------------
+123339 sequences.
+445 average length.
+12396 maximum length.
+300 minimum length.
+N50 = 421
+54.8 Mb altogether (54842903 bp).
+0 ambiguous Mb. (0 bp, 0%)
+0 Mb of Ns. (0 bp, 0%)
+-------------------------
+
