@@ -86,10 +86,10 @@ echo "makeblastdb -in uniprot_sprot.fasta -dbtype prot" >mdb
 launcher_creator.py -j mdb -n mdb -q shortq7 -t 6:00:00 -e studivanms@gmail.com
 sbatch mdb.slurm
 
-# splitting the transcriptome into 50 chunks, or however many is needed to keep the number of seqs per chunk under 1000
-splitFasta.pl Pclavus.fasta 50
+# splitting the transcriptome into 60 chunks, or however many is needed to keep the number of seqs per chunk under 1000
+splitFasta.pl Pclavus.fasta 60
 
-# blasting all 50 chunks to uniprot in parallel, 4 cores per chunk
+# blasting all 60 chunks to uniprot in parallel, 4 cores per chunk
 ls subset* | perl -pe 's/^(\S+)$/blastx -query $1 -db uniprot_sprot\.fasta -evalue 0\.0001 -num_threads 4 -num_descriptions 5 -num_alignments 5 -out $1.br/'>bl
 launcher_creator.py -j bl -n blast -t 6:00:00 -q shortq7 -e studivanms@gmail.com
 sbatch blast.slurm
@@ -128,10 +128,10 @@ cd /path/to/local/directory
 scp mstudiva@koko-login.hpc.fau.edu:~/path/to/HPC/directory/\*_out_PRO.fas .
 
 # copy link to job ID status and output file, paste it below instead of current link:
-# http://eggnog-mapper.embl.de/job_status?jobname=MM_f9vtfjaq
+# http://eggnog-mapper.embl.de/job_status?jobname=MM_x_40km8e
 
 # once it is done, download results to HPC:
-wget http://eggnog-mapper.embl.de/MM_f9vtfjaq/out.emapper.annotations
+wget http://eggnog-mapper.embl.de/MM_x_40km8e/out.emapper.annotations
 
 # GO:
 awk -F "\t" 'BEGIN {OFS="\t" }{print $1,$10 }' out.emapper.annotations | grep GO | perl -pe 's/,/;/g' >Pclavus_iso2go.tab
@@ -163,10 +163,10 @@ cd /path/to/local/directory
 scp mstudiva@koko-login.hpc.fau.edu:~/path/to/HPC/directory/\*4kegg.fasta .
 # use web browser to submit 4kegg.fasta file to KEGG's KAAS server (http://www.genome.jp/kegg/kaas/)
 # select SBH method, upload nucleotide query
-https://www.genome.jp/kaas-bin/kaas_main?mode=user&id=1703099308&key=XH4o3NDM
+https://www.genome.jp/kaas-bin/kaas_main?mode=user&id=1736128926&key=OfJJho3I
 
 # Once it is done, download to HPC - it is named query.ko by default
-wget https://www.genome.jp/tools/kaas/files/dl/1703099308/query.ko
+wget https://www.genome.jp/tools/kaas/files/dl/1736128926/query.ko
 
 # selecting only the lines with non-missing annotation:
 cat query.ko | awk '{if ($2!="") print }' > Pclavus_iso2kegg.tab

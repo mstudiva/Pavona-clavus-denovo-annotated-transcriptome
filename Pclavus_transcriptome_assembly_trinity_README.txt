@@ -1,4 +1,4 @@
-## De novo transcriptome assembly pipeline for Pavona clavus, version January 2, 2025
+## De novo transcriptome assembly pipeline for Pavona clavus, version January 5, 2025
 # Adapted by Michael Studivan (studivanms@gmail.com) based on repos by Misha Matz (https://github.com/z0on/annotatingTranscriptomes.git), Eli Meyer (https://github.com/Eli-Meyer/sequence_utilities.git; https://github.com/Eli-Meyer/transcriptome_utilities.git), and  Brian Strehlow (https://github.com/bstrehlow/Transcriptome_assembly.git) for use on the FAU KoKo HPC
 
 
@@ -163,10 +163,9 @@ cat SILVA_SSU_LSU_combined.fasta arb-silva.de_2024-12-27_id1369219_tax_silva_tru
 # https://www.ncbi.nlm.nih.gov/nuccore/NC_008165.1
 cp ~/bin/Pclavus_mitoRNA.fasta .
 
-conda activate bioperl
+conda activate blast
 # Running a perl script that blasts the transcriptome against inputted contamination sequences to generate a clean transcriptome
-echo 'conda activate bioperl' > contam
-echo 'module load blast-plus-2.11.0-gcc-9.2.0-5tzbbls' >> contam
+echo 'conda activate blast' > contam
 echo "perl ~/bin/RemoveContamSeq_blast+.pl type=blastn score=45 reads=Pclavus_Trinity_noshorts.fasta contam=rRNA,Pclavus_rRNA.fasta contam=Mt,Pclavus_mitoRNA.fasta table=Pclavus_Trinity_contamination.txt passed=Pclavus_Trinity_clean.fasta" >> contam
 launcher_creator.py -j contam -n contam -q mediumq7 -t 24:00:00 -e studivanms@gmail.com
 sbatch --mem=200GB contam.slurm
