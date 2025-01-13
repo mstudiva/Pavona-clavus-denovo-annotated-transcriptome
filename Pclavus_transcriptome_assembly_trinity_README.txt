@@ -310,7 +310,10 @@ Pclavus_Galaxy_clean.fasta
 
 Pclavus_Galaxy_clean.fasta (shorts included)
 -------------------------
-
+247248 sequences input.
+52625 of these matched Pmeandrina.fasta more closely than any contaminants.
+17323 matched contaminants more closely than Pmeandrina.fasta.
+177300 matched none of the supplied DB (nomatch.screened.fasta).
 -------------------------
 
 
@@ -340,6 +343,7 @@ export BLASTDB="$HOME/annotate/ncbi/nt:$BLASTDB"
 source ~/.bashrc
 
 # Split the no match assembly into 80 chunks to parallelize and decrease computing time per chunk (shooting for <1000 sequences per chunk)
+cd ~/path/to/working/directory
 splitFasta.pl nomatch.screened.fasta 80
 
 conda activate blast
