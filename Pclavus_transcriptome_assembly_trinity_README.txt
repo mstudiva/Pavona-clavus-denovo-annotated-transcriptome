@@ -1,4 +1,4 @@
-## De novo transcriptome assembly pipeline for Pavona clavus, version January 5, 2025
+## De novo transcriptome assembly pipeline for Pavona clavus, version January 12, 2025
 # Adapted by Michael Studivan (studivanms@gmail.com) based on repos by Misha Matz (https://github.com/z0on/annotatingTranscriptomes.git), Eli Meyer (https://github.com/Eli-Meyer/sequence_utilities.git; https://github.com/Eli-Meyer/transcriptome_utilities.git), and  Brian Strehlow (https://github.com/bstrehlow/Transcriptome_assembly.git) for use on the FAU KoKo HPC
 
 
@@ -172,7 +172,7 @@ launcher_creator.py -j contam -n contam -q mediumq7 -t 24:00:00 -e studivanms@gm
 sbatch --mem=200GB contam.slurm
 
 # ExcludeFasta_v2.pl is failing due to a Bioperl error, so run it on its own
-srun perl ~/bin/ExcludeFasta_v2.pl Pclavus_Trinity_contamination.txt Pclavus_Trinity_clean.fasta > Pclavus_Trinity_clean2.fasta
+srun perl ~/bin/ExcludeFasta_v2.pl Pclavus_Trinity_contamination.txt Pclavus_Trinity_clean.fasta > Pclavus_Trinity_clean.fasta
 
 echo 'conda activate bioperl' > contam2
 echo 'module load blast-plus-2.11.0-gcc-9.2.0-5tzbbls' >> contam2
@@ -180,7 +180,7 @@ echo "perl ~/bin/RemoveContamSeq_blast+.pl type=blastn score=45 reads=Pclavus_Ga
 launcher_creator.py -j contam2 -n contam2 -q mediumq7 -t 24:00:00 -e studivanms@gmail.com
 sbatch --mem=200GB contam2.slurm
 
-srun perl ~/bin/ExcludeFasta_v2.pl Pclavus_Galaxy_contamination.txt Pclavus_Galaxy_clean.fasta > Pclavus_Galaxy_clean2.fasta
+srun perl ~/bin/ExcludeFasta_v2.pl Pclavus_Galaxy_contamination.txt Pclavus_Galaxy_clean.fasta > Pclavus_Galaxy_clean.fasta
 
 Pclavus_Trinity_clean.fasta
 -------------------------
@@ -198,6 +198,15 @@ Pclavus_Galaxy_clean.fasta
         rRNA    965
         Mt	268
 123412 sequences passed all tests
+-------------------------
+
+Pclavus_Galaxy_clean.fasta (shorts included)
+-------------------------
+250614 sequences in input file
+3366 sequences look like contaminants
+        Mt	765
+        rRNA    2601
+247248 sequences passed all tests
 -------------------------
 
 echo "seq_stats.pl Pclavus_Trinity_clean.fasta > seqstats_Pclavus_Trinity_clean.txt" > seq_stats3
@@ -225,6 +234,18 @@ Pclavus_Galaxy_clean.fasta
 300 minimum length.
 N50 = 422
 54.9 Mb altogether (54871003 bp).
+0 ambiguous Mb. (0 bp, 0%)
+0 Mb of Ns. (0 bp, 0%)
+-------------------------
+
+Pclavus_Galaxy_clean.fasta (shorts included)
+-------------------------
+247248 sequences.
+346 average length.
+12396 maximum length.
+180 minimum length.
+N50 = 334
+85.6 Mb altogether (85636379 bp).
 0 ambiguous Mb. (0 bp, 0%)
 0 Mb of Ns. (0 bp, 0%)
 -------------------------
@@ -285,6 +306,11 @@ Pclavus_Galaxy_clean.fasta
 33783 of these matched Pmeandrina.fasta more closely than any contaminants.
 11450 matched contaminants more closely than Pmeandrina.fasta.
 78179 matched none of the supplied DB (nomatch.screened.fasta).
+-------------------------
+
+Pclavus_Galaxy_clean.fasta (shorts included)
+-------------------------
+
 -------------------------
 
 
