@@ -1,4 +1,4 @@
-## De novo transcriptome assembly pipeline for Pavona clavus, version January 12, 2025
+## De novo transcriptome assembly pipeline for Pavona clavus, version January 16, 2025
 # Adapted by Michael Studivan (studivanms@gmail.com) based on repos by Misha Matz (https://github.com/z0on/annotatingTranscriptomes.git), Eli Meyer (https://github.com/Eli-Meyer/sequence_utilities.git; https://github.com/Eli-Meyer/transcriptome_utilities.git), and  Brian Strehlow (https://github.com/bstrehlow/Transcriptome_assembly.git) for use on the FAU KoKo HPC
 
 
@@ -357,8 +357,6 @@ sbatch bl_nomatch.slurm
 
 # generate combined blast report
 cat subset*nomatch*.br > allblast.br
-# clean up
-rm subset*
 
 # scp the allblast.br file to your computer and run the taxonomizr.R script
 
@@ -373,14 +371,29 @@ grep -w -A 1 -f nomatch_symbiont.txt nomatch.screened.fasta --no-group-separator
 cat nomatch_symbiont.fasta | grep '>' | wc -l
 # 131 (Trinity)
 # 126 (Galaxy)
+# 222 (Galaxy shorts included)
 
 echo "grep -w -A 1 -f nomatch_host.txt nomatch.screened.fasta --no-group-separator > nomatch_host.fasta" > nomatch_host
-launcher_creator.py -j nomatch_host -n nomatch_host -q mediumq7 -t 12:00:00 -e studivanms@gmail.com
+launcher_creator.py -j nomatch_host -n nomatch_host -q mediumq7 -t 24:00:00 -e studivanms@gmail.com
 sbatch --mem=200GB nomatch_host.slurm
+
+# OPTIONAL: to speed up the above process, use the subsets generated earlier to parallelize
+for i in subset*nomatch*.fasta; do
+  echo "grep -w -A 1 -f nomatch_host.txt \"$i\" --no-group-separator > \"${i%.fasta}_host.fasta\"" >> nomatch_host
+done
+launcher_creator.py -j nomatch_host -n nomatch_host -q shortq7 -t 6:00:00 -e studivanms@gmail.com -N 5
+sbatch nomatch_host.slurm
+
+# Combine the subset fastas
+cat subset*nomatch.screened_host*.fasta > nomatch_host.fasta
+
+# Once done, clean up subsets
+rm subset*
 
 cat nomatch_host.fasta | grep '>' | wc -l
 # 21305 (Trinity)
 # 21308 (Galaxy)
+# 42023 (Galaxy shorts included)
 
 # Combine the host/symbiont nomatch assemblies with the original target/contam assemblies
 cat Smicroadriaticum.screened.fasta nomatch_symbiont.fasta > Cladocopium.fasta
@@ -440,6 +453,30 @@ N50 = 359
 0 Mb of Ns. (0 bp, 0%)
 -------------------------
 
+Pclavus.fasta (Galaxy shorts included)
+-------------------------
+94648 sequences.
+267 average length.
+8914 maximum length.
+60 minimum length.
+N50 = 418
+25.3 Mb altogether (25299738 bp).
+0 ambiguous Mb. (0 bp, 0%)
+0 Mb of Ns. (0 bp, 0%)
+-------------------------
+
+Cladocopium.fasta (Galaxy shorts included)
+-------------------------
+17545 sequences.
+341 average length.
+12396 maximum length.
+60 minimum length.
+N50 = 336
+6 Mb altogether (5983825 bp).
+0 ambiguous Mb. (0 bp, 0%)
+0 Mb of Ns. (0 bp, 0%)
+-------------------------
+
 
 #------------------------------
 ## GC content with BBMap package
@@ -465,6 +502,16 @@ sh ~/bin/bbmap/stats.sh in=Cladocopium.fasta
 A	C	G	T	N	IUPAC	Other	GC	GC_stdev
 0.2371	0.2627	0.2635	0.2367	0.0000	0.0000	0.0000	0.5262	0.0527
 # (Galaxy)
+
+sh ~/bin/bbmap/stats.sh in=Pclavus.fasta
+A	C	G	T	N	IUPAC	Other	GC	GC_stdev
+0.2890	0.2102	0.2090	0.2919	0.0000	0.0000	0.0000	0.4192	0.0725
+# (Galaxy shorts included)
+
+sh ~/bin/bbmap/stats.sh in=Cladocopium.fasta
+A	C	G	T	N	IUPAC	Other	GC	GC_stdev
+0.2375	0.2620	0.2628	0.2378	0.0000	0.0000	0.0000	0.5247	0.0608
+# (Galaxy shorts included)
 
 
 #------------------------------
@@ -519,6 +566,30 @@ Number of missing core genes	233 (91.37%)
 Average number of orthologs per core genes	1.00
 % of detected core genes that have more than 1 ortholog	0.00
 Scores in BUSCO format	C:1.6%[S:1.6%,D:0.0%],F:7.1%,M:91.3%
+-------------------------
+
+Pclavus.fasta (Galaxy shorts included)
+-------------------------
+Total # of core genes queried:    954
+# of core genes detected
+  Complete:    177 (18.55%)
+  Complete + Partial:    507 (53.14%)
+# of missing core genes:    447 (46.86%)
+Average # of orthologs per core genes:    1.24
+% of detected core genes that have more than 1 ortholog:    15.25
+Scores in BUSCO format:    C:18.5%[S:15.7%,D:2.8%],F:34.6%,M:46.9%,n:954
+-------------------------
+
+Cladocopium.fasta (Galaxy shorts included)
+-------------------------
+Total # of core genes queried:    255
+# of core genes detected
+  Complete:    4 (1.57%)
+  Complete + Partial:    25 (9.80%)
+# of missing core genes:    230 (90.20%)
+Average # of orthologs per core genes:    1.00
+% of detected core genes that have more than 1 ortholog:    0.00
+Scores in BUSCO format:    C:1.6%[S:1.6%,D:0.0%],F:8.2%,M:90.2%,n:255
 -------------------------
 # The BUSCO scores (completeness) are really low for symbionts due to poor coverage in Tag-Seq sequencing, so we will not use these assemblies for alignment
 
