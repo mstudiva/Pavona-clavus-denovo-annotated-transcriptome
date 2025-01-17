@@ -1,4 +1,4 @@
-# Pavona clavus Transcriptome Annotation, version January 3, 2025
+# Pavona clavus Transcriptome Annotation, version January 17, 2025
 # Created by Misha Matz (matz@utexas.edu), modified by Michael Studivan (studivanms@gmail.com) for use on FAU's HPC (KoKo)
 
 
@@ -60,12 +60,12 @@ sbatch seq_stats.slurm
 
 Pclavus.fasta
 -------------------------
-55091 sequences.
-351 average length.
+94648 sequences.
+267 average length.
 8914 maximum length.
 60 minimum length.
-N50 = 519
-19.3 Mb altogether (19331252 bp).
+N50 = 418
+25.3 Mb altogether (25299738 bp).
 0 ambiguous Mb. (0 bp, 0%)
 0 Mb of Ns. (0 bp, 0%)
 -------------------------
@@ -128,10 +128,10 @@ cd /path/to/local/directory
 scp mstudiva@koko-login.hpc.fau.edu:~/path/to/HPC/directory/\*_out_PRO.fas .
 
 # copy link to job ID status and output file, paste it below instead of current link:
-# http://eggnog-mapper.embl.de/job_status?jobname=MM_x_40km8e
+# http://eggnog-mapper.embl.de/job_status?jobname=MM_mv38pa5y
 
 # once it is done, download results to HPC:
-wget http://eggnog-mapper.embl.de/MM_x_40km8e/out.emapper.annotations
+wget http://eggnog-mapper.embl.de/MM_mv38pa5y/out.emapper.annotations
 
 # GO:
 awk -F "\t" 'BEGIN {OFS="\t" }{print $1,$10 }' out.emapper.annotations | grep GO | perl -pe 's/,/;/g' >Pclavus_iso2go.tab
@@ -163,10 +163,10 @@ cd /path/to/local/directory
 scp mstudiva@koko-login.hpc.fau.edu:~/path/to/HPC/directory/\*4kegg.fasta .
 # use web browser to submit 4kegg.fasta file to KEGG's KAAS server (http://www.genome.jp/kegg/kaas/)
 # select SBH method, upload nucleotide query
-https://www.genome.jp/kaas-bin/kaas_main?mode=user&id=1736128926&key=OfJJho3I
+https://www.genome.jp/kaas-bin/kaas_main?mode=user&id=1737121167&key=OfJJho3I
 
 # Once it is done, download to HPC - it is named query.ko by default
-wget https://www.genome.jp/tools/kaas/files/dl/1736128926/query.ko
+wget https://www.genome.jp/tools/kaas/files/dl/1737121167/query.ko
 
 # selecting only the lines with non-missing annotation:
 cat query.ko | awk '{if ($2!="") print }' > Pclavus_iso2kegg.tab

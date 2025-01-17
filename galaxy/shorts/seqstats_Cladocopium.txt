@@ -1,0 +1,13 @@
+
+Cladocopium.fasta
+-------------------------
+17545 sequences.
+341 average length.
+12396 maximum length.
+60 minimum length.
+N50 = 336
+6 Mb altogether (5983825 bp).
+0 ambiguous Mb. (0 bp, 0%)
+0 Mb of Ns. (0 bp, 0%)
+-------------------------
+
